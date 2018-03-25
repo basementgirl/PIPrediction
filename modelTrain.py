@@ -65,11 +65,32 @@ def split_sample(x,y):
 
 
 #模型训练
+'''
 def modle_train(X_train,X_test, y_train, y_test):
-    xgbr = xgb.XGBClassifier()
-    xgbr.fit(X_train, y_train)
-    xgbr_y_predict = xgbr.predict(X_test)
-    print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))
+    xgbc = xgb.XGBClassifier()
+    xgbc.fit(X_train, y_train)
+    xgbr_y_predict = xgbc.predict(X_test)
+
+    #xgbr_intr_list = xgbr.intercept_
+    #xgbr_coef_list = xgbr.coef_
+
+    print(xgbr_intr_list ,xgbr_coef_list)
+
+    print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))'''
+
+
+def modle_train(X_train, X_test, y_train, y_test):
+    from sklearn.linear_model import SGDClassifier
+    sgd = SGDClassifier()
+    sgd.fit(X_train, y_train)
+    sgdr_y_predict = sgd.predict(X_test)
+
+    sgd_intr_list = sgd.intercept_
+    sgd_coef_list = sgd.coef_
+
+    print(sgd_intr_list, sgd_coef_list)
+
+    print(classification_report(y_test, sgdr_y_predict, target_names=['0', '1']))
 
 
 #代码入口
@@ -82,15 +103,5 @@ if __name__=='__main__':
 
 
 
-
-
-
-
-'''
-from sklearn.linear_model import LogisticRegression
-lr = LogisticRegression()
-lr.fit(X_train, y_train)
-lr_y_predict = lr.predict(X_test)
-'''
 
 
