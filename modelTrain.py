@@ -5,6 +5,8 @@ import xgboost as xgb
 from sklearn.metrics import classification_report
 from sklearn.cross_validation import train_test_split
 from builtSession import main
+from keras.models import Sequential
+from keras.layers import Dense, Dropout
 
 
 def built_train(dict_n):
@@ -30,31 +32,38 @@ def built_train(dict_n):
         final_sku=dict_n[i][max(dict_n[i].keys())][0]
 
         for i in sku_uti:              #建立特征x和标记y
-            x.append(sku_uti[i][0])
+            k=[i]
+            k.extend(sku_uti[i][0])    #用来加上商品编号
+            x.append(k)
+            #x.append(sku_uti[i][0])
             if i != final_sku:
                 y.append(0)
             else:
-                y.append(1)
-    x=pd.DataFrame(x)
+                y.append(1)        #实现了最初的x和y
 
-    print('len(x)',len(x))
+
+    x=pd.DataFrame(x)
+    x.columns = ['sku_id','clicks', 'browse', 'favor', 'addcart', 'delcart']
+
+
+    #print('!!',x)
     x_add=[]
     for i in range(len(y)):
         if y[i]==1:
-            x_add.append(x.iloc[i])
+            x_add.append(x.iloc[i])      #复制正样本
+
 
     y_add=[1]*len(x_add)*2
     y.extend(y_add)    #注意，这里y没有返回值，直接在y的基础上做的改变。
+    y=pd.Series(y)
 
     x_add=pd.DataFrame(x_add)
     x=pd.concat([x,x_add])
     x=pd.concat([x,x_add])
-    y=pd.Series(y)
 
-    print('y',y)
-    print('x',x)
-    print('y',len(y))
-    print('y=1',sum(y))
+    #x.index=x.iloc[:,0]
+    #x.drop(['sku_id'],inplace=True,axis=1)
+
     return x,y
 
 
@@ -71,12 +80,7 @@ def modle_train(X_train,X_test, y_train, y_test):
     xgbc.fit(X_train, y_train)
     xgbr_y_predict = xgbc.predict(X_test)
 
-    #xgbr_intr_list = xgbr.intercept_
-    #xgbr_coef_list = xgbr.coef_
-
-    print(xgbr_intr_list ,xgbr_coef_list)
-
-    print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))'''
+    print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))
 
 
 def modle_train(X_train, X_test, y_train, y_test):
@@ -90,15 +94,87 @@ def modle_train(X_train, X_test, y_train, y_test):
 
     print(sgd_intr_list, sgd_coef_list)
 
-    print(classification_report(y_test, sgdr_y_predict, target_names=['0', '1']))
+    print(classification_report(y_test, sgdr_y_predict, target_names=['0', '1']))'''
+
+
+
+
+def model_train(X_train, X_test, y_train, y_test):
+    model = Sequential()
+    model.add(Dense(64, input_dim=6, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
+
+    model.compile(loss='binary_crossentropy',
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
+    model.fit(X_train, y_train,
+              epochs=20,batch_size=1
+              )
+    score = model.evaluate(X_test, y_test, batch_size=1)
+    return score
+
+
+
+def convert_com_nums(n):
+    if n==0:
+        return 0
+    elif n==1:
+        return 1
+    elif n==2:
+        return 7
+    elif n==3:
+        return 30
+    elif n==4:
+        return 80
+
+def get_com():
+    comment_file = 'JData_ori/JData_Comment.csv'
+    df = pd.read_csv(comment_file)
+    df['comment_num'] = df['comment_num'].map(convert_com_nums)
+    df['good_comment_rate']=1-df['bad_comment_rate']
+
+    p=df['good_comment_rate']
+    n=df['comment_num']
+    z=1.96
+    df['good_comment_rate_new']=(p+1/(2*n)*z**2-z*np.sqrt(p*(1-p)/n+z**2/(4*n**2))) / (1+1/n*z**2)
+    df.drop_duplicates(inplace=True)    #去重
+
+    df=df[['sku_id','good_comment_rate_new']]
+
+    df=df.groupby(['sku_id'],as_index=False).mean()
+    return df
+
 
 
 #代码入口
 if __name__=='__main__':
     dict_n = main()
     x,y=built_train(dict_n)
+
+    x['sku_id']=x['sku_id'].astype(int)
+    x_com=get_com()
+
+    print('x_com',x_com)
+    print('x',x)
+    x=pd.merge(x,x_com,on=['sku_id'],how='left')
+    print('x_all',x)
+    x.index=x.iloc[:,0]
+    x.drop(['sku_id'],inplace=True,axis=1)
+
+    x.fillna(0,inplace=True)
+    print('x_f',x)
+
+    print(len(x),len(y))
     X_train, X_test, y_train, y_test=split_sample(x, y)
-    print(modle_train(X_train,X_test, y_train, y_test))
+    #print('111',X_train, X_test, y_train, y_test)
+    print(model_train(X_train,X_test, y_train, y_test))
+
+
+
+
 
 
 
