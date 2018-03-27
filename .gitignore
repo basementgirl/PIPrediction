@@ -2,3 +2,6 @@
 JData_ori/
 Data/
 tempFile/
+.idea/
+.DS_Store/
+__pycache/

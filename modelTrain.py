@@ -7,6 +7,7 @@ from sklearn.cross_validation import train_test_split
 from builtSession import main
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
+from sklearn import cross_validation,metrics
 
 
 def built_train(dict_n):
@@ -79,7 +80,11 @@ def modle_train(X_train,X_test, y_train, y_test):
     xgbc = xgb.XGBClassifier()
     xgbc.fit(X_train, y_train)
     xgbr_y_predict = xgbc.predict(X_test)
-
+    
+    test_auc = metrics.roc_auc_score(y_test,xgbr_y_predict)
+    print('auc is :',test_auc)
+    
+    
     print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))
 
 
@@ -157,17 +162,13 @@ if __name__=='__main__':
     x['sku_id']=x['sku_id'].astype(int)
     x_com=get_com()
 
-    print('x_com',x_com)
-    print('x',x)
     x=pd.merge(x,x_com,on=['sku_id'],how='left')
-    print('x_all',x)
     x.index=x.iloc[:,0]
     x.drop(['sku_id'],inplace=True,axis=1)
 
     x.fillna(0,inplace=True)
-    print('x_f',x)
 
-    print(len(x),len(y))
+    print('hhh',x.shape,y.shape)
     X_train, X_test, y_train, y_test=split_sample(x, y)
     #print('111',X_train, X_test, y_train, y_test)
     print(model_train(X_train,X_test, y_train, y_test))
