@@ -2,3 +2,5 @@
 JData_ori/
 Data/
 tempFile/
+.DS_Store
+__pycache__/
