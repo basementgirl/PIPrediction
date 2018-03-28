@@ -27,7 +27,7 @@ def data_deal(df):
     df=df.sort_values(['user_id','time'],axis = 0,ascending = True)    #对每个用户按时间排序。
 
     df['type'] = df['type'].map(convert_type)
-    df=df[:50000]
+    df=df[:5000]
     return df
 
 
