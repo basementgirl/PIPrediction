@@ -16,7 +16,6 @@ def built_train(dict_n):
     for i in sorted(dict_n.keys()):  # i指会话id
         n=len(dict_n[i])  # n指会话的长度
         sku_uti= dict()
-
         for j in range(1,n):     # j是指位置。之所以range后，跟的是n，而非n+1是因为session中的最后一个商品是购买，
                                   # 我们计算效用时不用。
             ini_x=np. zeros((1, 5))        #初始化x，既指数函数值
@@ -47,12 +46,11 @@ def built_train(dict_n):
     x.columns = ['sku_id','clicks', 'browse', 'favor', 'addcart', 'delcart']
 
 
-    #print('!!',x)
+    #上采样
     x_add=[]
     for i in range(len(y)):
         if y[i]==1:
             x_add.append(x.iloc[i])      #复制正样本
-
 
     y_add=[1]*len(x_add)*2
     y.extend(y_add)    #注意，这里y没有返回值，直接在y的基础上做的改变。
@@ -62,10 +60,14 @@ def built_train(dict_n):
     x=pd.concat([x,x_add])
     x=pd.concat([x,x_add])
 
-    #x.index=x.iloc[:,0]
-    #x.drop(['sku_id'],inplace=True,axis=1)
 
+    #下采样
+    for i in range(len(y)):
+        if y[i]==0 and i %2==0:
+            x.drop([i],inplace=True)     #删负样本
+            y.drop([i],inplace=True)
     return x,y
+
 
 
 #随机采样25%的数据用于测试，剩下的75%用于构建训练集合。
@@ -75,35 +77,19 @@ def split_sample(x,y):
 
 
 #模型训练
-'''
-def modle_train(X_train,X_test, y_train, y_test):
+
+def model_train(X_train,X_test, y_train, y_test):
     xgbc = xgb.XGBClassifier()
     xgbc.fit(X_train, y_train)
     xgbr_y_predict = xgbc.predict(X_test)
     
     test_auc = metrics.roc_auc_score(y_test,xgbr_y_predict)
     print('auc is :',test_auc)
-    
-    
     print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))
 
 
-def modle_train(X_train, X_test, y_train, y_test):
-    from sklearn.linear_model import SGDClassifier
-    sgd = SGDClassifier()
-    sgd.fit(X_train, y_train)
-    sgdr_y_predict = sgd.predict(X_test)
 
-    sgd_intr_list = sgd.intercept_
-    sgd_coef_list = sgd.coef_
-
-    print(sgd_intr_list, sgd_coef_list)
-
-    print(classification_report(y_test, sgdr_y_predict, target_names=['0', '1']))'''
-
-
-
-
+'''
 def model_train(X_train, X_test, y_train, y_test):
     model = Sequential()
     model.add(Dense(64, input_dim=6, activation='relu'))
@@ -120,6 +106,7 @@ def model_train(X_train, X_test, y_train, y_test):
               )
     score = model.evaluate(X_test, y_test, batch_size=1)
     return score
+'''
 
 
 
@@ -169,8 +156,8 @@ if __name__=='__main__':
     x.fillna(0,inplace=True)
 
     print('hhh',x.shape,y.shape)
+    print('positive sample num is: ', sum(y),'。 all sample num is ：',len(y))
     X_train, X_test, y_train, y_test=split_sample(x, y)
-    #print('111',X_train, X_test, y_train, y_test)
     print(model_train(X_train,X_test, y_train, y_test))
 
 

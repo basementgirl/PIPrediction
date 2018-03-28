@@ -44,6 +44,7 @@ for i in x_lst:
     y=sigmoid(-i/1000)
     y_lst.append(y)
 
+
 x_lst1=[-x/1000 for x in x_lst]
 
 plt.plot(x_lst1, y_lst,'r', label='broadcast')
