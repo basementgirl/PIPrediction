@@ -23,7 +23,7 @@ def built_train(dict_n):
 
             current_type= dict_n[i][j][1]     #当前类型
 
-            temp=math.exp((n-j)/n)      #指数函数值
+            temp=math.exp(-(n-j)/n)     #指数函数值
 
             sku_uti[dict_n[i][j][0]][0][current_type-1]+= temp    # 在相应位置加上这个指数函数值
                                           # sku_uti={sku_id:[[x1,x2,x3,x4,x5]]}

@@ -27,7 +27,7 @@ def data_deal(df):
     df=df.sort_values(['user_id','time'],axis = 0,ascending = True)    #对每个用户按时间排序。
 
     df['type'] = df['type'].map(convert_type)
-    df=df[:5000]
+    df=df[:50000]
     return df
 
 
@@ -57,14 +57,22 @@ def bulit_session(df):
             dict_n[i][m] = dict_sess[i][j]
             m += 1                           #这里出的问题，因为无序输出，所以，会出现第8各session中，第二个位置为类型6的情况。
 
-    return dict_n
+
+    dict_new=dict_n.copy()
+    for k in dict_n:
+        if len(dict_n[k])<5:
+            dict_new.pop(k)
+
+    return dict_new
 
 
 def main():
-    action_2016_03_file = 'JData_ori/JData_Action_201603.csv'
+    action_2016_03_file = 'JData_ori/JData_Action_201602.csv'
     df = pd.read_csv(action_2016_03_file)
     df=data_deal(df)
     return bulit_session(df)
+
+
 
 
 
