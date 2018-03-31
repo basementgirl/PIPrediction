@@ -1,26 +1,30 @@
 import numpy as np
 import pandas as pd
 import math
-import xgboost as xgb
+#import xgboost as xgb
 from sklearn.metrics import classification_report
 from sklearn.cross_validation import train_test_split
 from builtSession import main
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from sklearn import cross_validation, metrics
+import keras.backend as K
+from sklearn.linear_model import LogisticRegression
 
 
 def built_train(dict_n):
     x=[]
     y=[]
     for i in sorted(dict_n.keys()):  # i指会话id
+
         fre_count = []
-        n = len(dict_n[i])  # n指会话的长度
-        sku_type_count = {}
-        sku_ord={}
+        ses_len = len(dict_n[i])  # n指会话的长度
+
+        sku_type_count = {}   #统计类型
+        sku_ord={}  #统计次序
         sku_fea = {} # 用来统计特征
 
-        for j in range(1,n):     #对于当前会话的每一个商品
+        for j in range(1,ses_len):     #遍历一个会话
             cur_sku=dict_n[i][j][0]
             cur_typ=dict_n[i][j][1]
 
@@ -31,17 +35,15 @@ def built_train(dict_n):
 
             sku_ord.setdefault(cur_sku,[])       #记录出现的次序
             sku_ord[cur_sku].append(j)
-
         for m in sku_type_count:     #对于每个商品
             sku_fea.setdefault(m,[])
             sku_fea[m].append(fre_count.count(m))      #频次
-            sku_fea[m].append(n-max(sku_ord[m]))    #次序
+            sku_fea[m].append(ses_len-max(sku_ord[m]))    #次序
 
             for n in range(1,6):
                 sku_fea[m].append(sku_type_count[m].count(n))     #统计当前商品各操作类型的频次。
 
         final_sku = dict_n[i][max(dict_n[i].keys())][0]   #当前会话的最后一个位置上的商品，即最后购买的商品
-        #print('final_sku',final_sku)
 
         for k in sku_fea:  # 建立特征x和标记y. sku_fea形如：{sku_id:[频次，浏览次数]}
             temp = [k]
@@ -53,7 +55,7 @@ def built_train(dict_n):
                 y.append(1)  # 实现了最初的x和y
 
     x = pd.DataFrame(x)
-    x.columns = ['sku_id', 'ord','act_num', 'click_num','browse_num', 'favor_num', 'addcart_num', 'delcart_num']
+    x.columns = ['sku_id', 'act_num','ord' ,'click_num','browse_num', 'favor_num', 'addcart_num', 'delcart_num']
 
     # 上采样
     x_add = []
@@ -83,8 +85,21 @@ def split_sample(x, y):
     return X_train, X_test, y_train, y_test
 
 
-# 模型训练
+'''
+def model_train(X_train, X_test, y_train, y_test):
+    lr = LogisticRegression()
 
+    lr.fit(X_train, y_train)
+
+    lr_y_predict = lr.predict(X_test)
+
+    print(lr_y_predict, y_test)
+
+    print(classification_report(y_test, lr_y_predict, target_names=['0', '1']))'''
+
+
+'''
+# 模型训练
 def model_train(X_train, X_test, y_train, y_test):
     xgbc = xgb.XGBClassifier()
     xgbc.fit(X_train, y_train)
@@ -92,7 +107,58 @@ def model_train(X_train, X_test, y_train, y_test):
 
     test_auc = metrics.roc_auc_score(y_test, xgbr_y_predict)
     print('auc is :', test_auc)
-    print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))
+    print(type(xgbr_y_predict ), type(y_test))
+    print(xgbr_y_predict .shape, y_test.shape)
+    print(xgbr_y_predict , y_test)
+    print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))'''
+
+
+
+def map_int(i):
+    if i>= 0.5:  # 概率大于0.5预测为1，否则预测为0
+        return 1
+    else:
+        return 0
+def model_train(X_train, X_test, y_train, y_test):
+    model = Sequential()
+    model.add(Dense(64, input_dim=8, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(1, activation='sigmoid'))
+
+    model.compile(loss='binary_crossentropy',
+                  optimizer='rmsprop',
+                  metrics=['accuracy'])
+    model.fit(X_train, y_train,
+              epochs=20,batch_size=50
+              )
+    score = model.evaluate(X_test, y_test, batch_size=50)
+    predict_y=model.predict(X_test, batch_size=32, verbose=0)
+
+    predict_y=predict_y.reshape(1, -1)     #对预测的概率值变成整数值
+    predict_y=pd.Series(predict_y[0])
+    predict_y=predict_y.map(map_int)
+
+    res=classification_report(y_test, predict_y, target_names=['0', '1'])
+    print(score)
+    print(res)
+
+'''
+import tensorflow as tf
+import tempfile
+import pandas as pd
+import urllib
+import numpy as np
+
+
+
+model_dir = tempfile.mkdtemp()
+m = tf.contrib.learn.DNNLinearCombinedClassifier(
+    model_dir=model_dir,
+    linear_feature_columns=wide_columns,
+    dnn_feature_columns=deep_columns,
+    dnn_hidden_units=[50, 25])'''
 
 
 
@@ -114,16 +180,13 @@ def get_com():
     df = pd.read_csv(comment_file)
     df['comment_num'] = df['comment_num'].map(convert_com_nums)
     df['good_comment_rate'] = 1 - df['bad_comment_rate']
-
     p = df['good_comment_rate']
     n = df['comment_num']
     z = 1.96
     df['good_comment_rate_new'] = (p + 1 / (2 * n) * z ** 2 - z * np.sqrt(p * (1 - p) / n + z ** 2 / (4 * n ** 2))) / (
     1 + 1 / n * z ** 2)
     df.drop_duplicates(inplace=True)  # 去重
-
     df = df[['sku_id', 'good_comment_rate_new']]
-
     df = df.groupby(['sku_id'], as_index=False).mean()
     return df
 
@@ -145,6 +208,7 @@ if __name__ == '__main__':
     print('hhh', x.shape, y.shape)
     print('positive sample num is: ', sum(y), '。 all sample num is ：', len(y))
     X_train, X_test, y_train, y_test = split_sample(x, y)
+    #print('X_train',X_train[:20],'y_train',y_train[:20])
     print(model_train(X_train, X_test, y_train, y_test))
 
 

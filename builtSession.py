@@ -67,12 +67,10 @@ def bulit_session(df):
 
 
 def main():
-    action_2016_03_file = 'JData_ori/JData_Action_201602.csv'
+    action_2016_03_file = 'JData_ori/JData_Action_201603.csv'
     df = pd.read_csv(action_2016_03_file)
     df=data_deal(df)
     return bulit_session(df)
-
-
 
 
 
