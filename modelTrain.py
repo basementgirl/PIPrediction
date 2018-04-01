@@ -89,25 +89,6 @@ def model_train(X_train,X_test, y_train, y_test):
 
 
 
-'''
-def model_train(X_train, X_test, y_train, y_test):
-    model = Sequential()
-    model.add(Dense(64, input_dim=6, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(1, activation='sigmoid'))
-
-    model.compile(loss='binary_crossentropy',
-                  optimizer='rmsprop',
-                  metrics=['accuracy'])
-    model.fit(X_train, y_train,
-              epochs=20,batch_size=1
-              )
-    score = model.evaluate(X_test, y_test, batch_size=1)
-    return score
-'''
-
 
 
 def convert_com_nums(n):
