@@ -1,7 +1,6 @@
 import numpy as np
-import pandas as pd
 from sklearn.cross_validation import train_test_split
-from builtSession import main
+from builtSession import *
 from modelSet import ann_model
 
 
@@ -109,7 +108,8 @@ def get_com():
 
 # 代码入口
 if __name__ == '__main__':
-    dict_n = main()
+    dict_n = getSession("data/jdata-data/JData_Action_201602.csv")
+
     x, y = built_train(dict_n)
 
     x['sku_id'] = x['sku_id'].astype(int)

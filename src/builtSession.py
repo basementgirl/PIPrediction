@@ -1,4 +1,3 @@
-
 import pandas as pd
 
 
@@ -16,18 +15,26 @@ def convert_type(type):
     elif type == 6:
         return 1
 
+def convertType(type):
+    mapt = [0,2,4,5,6,3,1]
+    return mapt[type]
 
-def data_deal(df):
+
+def pre_deal(actionFileName):
+    print("read file : " + actionFileName)
+    df = pd.read_csv(actionFileName)
+
     #进行简单的数据预处理工作
     df=df[df['time']>='2016-02-01']
     df.drop(['model_id'],axis=1,inplace=True)   #删除列，axis默认为0代表删除行；所以要置axis=1
     df.drop(['cate'],axis=1,inplace=True)
     df.drop(['brand'],axis=1,inplace=True)
     df.drop_duplicates(inplace=True)    #去重
+
     df=df.sort_values(['user_id','time'],axis = 0,ascending = True)    #对每个用户按时间排序。
 
-    df['type'] = df['type'].map(convert_type)
-    df=df[:50000]
+    df['type'] = df['type'].map(convertType)
+
     return df
 
 
@@ -65,19 +72,31 @@ def bulit_session(df):
 
     return dict_new
 
+def builtSession(df):
+    session = []
+    session_id = 1
+    for i in range(0,len(df)):
+        action = df.iloc[i]
 
-def main():
-    action_2016_03_file = 'JData_ori/JData_Action_201603.csv'
-    df = pd.read_csv(action_2016_03_file)
-    df=data_deal(df)
+        if action['type'] == 6 :
+            session_id += 1
+            continue
+        session.append( ( session_id, action['sku_id'], action['type'] ) )
+
+    df = pd.DataFrame(session,columns=('session_id','sku_id','type'))
+
+    return df
+
+
+
+
+def getSession(actionFileName):
+    df=pre_deal(actionFileName)
+    df=df[:50000]
     return bulit_session(df)
 
 
-
-'''
-dict_n=main()
-for i in sorted(dict_n):
-    final = dict_n[i][max(dict_n[i].keys())]
-    print('final_sku', final)'''
-
-
+if __name__ == '__main__' :
+    df = pre_deal('data/temp/action.csv')
+    df = builtSession(df)
+    print(df.head(100))
