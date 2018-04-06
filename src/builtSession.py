@@ -16,6 +16,12 @@ def convert_type(type):
         return 1
 
 def convertType(type):
+    '''
+    京东原始数据中type为:
+    1.浏览,2.加购,3.删购,4.下单,5.关注,6.点击
+    改为：
+    1.点击,2.浏览,3.关注,4.加购,5.删购,6.下单
+    '''
     mapt = [0,2,4,5,6,3,1]
     return mapt[type]
 
