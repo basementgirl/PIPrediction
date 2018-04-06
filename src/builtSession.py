@@ -79,17 +79,19 @@ def bulit_session(df):
     return dict_new
 
 def builtSession(df):
-    session = []
+    #对每个用户按时间排序。
+    df=df.sort_values(['user_id','time'],axis = 0,ascending = True)
+
+    sessions = []
     session_id = 1
     for i in range(0,len(df)):
         action = df.iloc[i]
+        sessions.append( ( session_id, action['sku_id'], action['type'] ) )
 
         if action['type'] == 6 :
             session_id += 1
-            continue
-        session.append( ( session_id, action['sku_id'], action['type'] ) )
 
-    df = pd.DataFrame(session,columns=('session_id','sku_id','type'))
+    df = pd.DataFrame(sessions,columns=('session_id','sku_id','type'))
 
     return df
 
