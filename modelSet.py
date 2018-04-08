@@ -44,14 +44,15 @@ def map_int(i):
 
 def ann_model(X_train, X_test, y_train, y_test):
     model = Sequential()
-    model.add(Dense(64, input_dim=8, activation='relu'))
+    model.add(Dense(32, input_dim=8, activation='sigmoid'))
     model.add(Dropout(0.3))
-    model.add(Dense(32, activation='relu'))
+    model.add(Dense(16, activation='sigmoid'))
     model.add(Dropout(0.3))
     model.add(Dense(1, activation='sigmoid'))
 
     model.compile(loss='binary_crossentropy',
                   optimizer='rmsprop',
+                  #optimizer='sgd',
                   metrics=['accuracy'])
     model.fit(X_train, y_train,
               epochs=20,batch_size=50
@@ -66,6 +67,8 @@ def ann_model(X_train, X_test, y_train, y_test):
     res=classification_report(y_test, predict_y, target_names=['0', '1'])
     print(score)
     print(res)
+
+
 
 
 
