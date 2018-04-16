@@ -50,7 +50,8 @@ def built_train(dict_n):
     x = pd.DataFrame(x)
     x.columns = ['sku_id', 'act_num','ord' ,'click_num','browse_num', 'favor_num', 'addcart_num', 'delcart_num']
 
-    # 上采样
+    '''
+    上采样
     x_add = []
     for i in range(len(y)):
         if y[i] == 1:
@@ -62,11 +63,12 @@ def built_train(dict_n):
 
     x_add = pd.DataFrame(x_add)
     x = pd.concat([x, x_add])
-    x = pd.concat([x, x_add])
+    x = pd.concat([x, x_add])'''
 
+    y = pd.Series(y)
     # 下采样
     for i in range(len(y)):
-        if y[i] == 0 and i % 2 == 0:
+        if y[i] == 0 and (i % 2 == 0 or i % 3 == 0 or i % 5 == 0 ):
             x.drop([i], inplace=True)  # 删负样本
             y.drop([i], inplace=True)
     return x,y
@@ -89,6 +91,7 @@ def convert_com_nums(n):
         return 30
     elif n == 4:
         return 80
+
 
 
 def get_com():

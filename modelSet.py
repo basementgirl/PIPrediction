@@ -9,7 +9,9 @@ from sklearn.linear_model import LogisticRegression
 import tensorflow as tf
 import tempfile
 import urllib
-
+import numpy as np
+from sklearn.metrics import roc_curve
+from sklearn.metrics import auc
 
 
 def lr_model(X_train, X_test, y_train, y_test):
@@ -17,6 +19,9 @@ def lr_model(X_train, X_test, y_train, y_test):
     lr.fit(X_train, y_train)
     lr_y_predict = lr.predict(X_test)
     print(lr_y_predict, y_test)
+
+    test_auc = metrics.roc_auc_score(y_test, lr_y_predict)  # 验证集上的auc值
+    print('test_auc', test_auc)
     print(classification_report(y_test, lr_y_predict, target_names=['0', '1']))
 
 
@@ -32,6 +37,9 @@ def xgb_model(X_train, X_test, y_train, y_test):
     print(type(xgbr_y_predict ), type(y_test))
     print(xgbr_y_predict .shape, y_test.shape)
     print(xgbr_y_predict , y_test)
+
+    test_auc = metrics.roc_auc_score(y_test, xgbr_y_predict)  # 验证集上的auc值
+    print('test_auc', test_auc)
     print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))
 
 
@@ -44,14 +52,16 @@ def map_int(i):
 
 def ann_model(X_train, X_test, y_train, y_test):
     model = Sequential()
-    model.add(Dense(32, input_dim=8, activation='sigmoid'))
+    model.add(Dense(64, input_dim=8, activation='relu'))
     model.add(Dropout(0.3))
-    model.add(Dense(16, activation='sigmoid'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dropout(0.3))
+    model.add(Dense(16, activation='relu'))
     model.add(Dropout(0.3))
     model.add(Dense(1, activation='sigmoid'))
 
     model.compile(loss='binary_crossentropy',
-                  optimizer='rmsprop',
+                  optimizer='adam',
                   #optimizer='sgd',
                   metrics=['accuracy'])
     model.fit(X_train, y_train,
@@ -65,8 +75,12 @@ def ann_model(X_train, X_test, y_train, y_test):
     predict_y=predict_y.map(map_int)
 
     res=classification_report(y_test, predict_y, target_names=['0', '1'])
-    print(score)
-    print(res)
+
+    test_auc = metrics.roc_auc_score(y_test, predict_y)  # 验证集上的auc值
+    print('test_auc',test_auc)
+
+    print('score',score)
+    print('res',res)
 
 
 

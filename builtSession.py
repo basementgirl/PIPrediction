@@ -27,7 +27,7 @@ def data_deal(df):
     df=df.sort_values(['user_id','time'],axis = 0,ascending = True)    #对每个用户按时间排序。
 
     df['type'] = df['type'].map(convert_type)
-    df=df[:50000]
+    df=df[:100000]
     return df
 
 
@@ -55,7 +55,7 @@ def bulit_session(df):
         m = 1
         for j in sorted(dict_sess[i].keys()):
             dict_n[i][m] = dict_sess[i][j]
-            m += 1                           #这里出的问题，因为无序输出，所以，会出现第8各session中，第二个位置为类型6的情况。
+            m += 1                  #这里出的问题，因为无序输出，所以，会出现第8各session中，第二个位置为类型6的情况。用sorted限制
 
 
     dict_new=dict_n.copy()
@@ -67,7 +67,7 @@ def bulit_session(df):
 
 
 def main():
-    action_2016_03_file = 'JData_ori/JData_Action_201603.csv'
+    action_2016_03_file = 'JData_ori/JData_Action_201602.csv'
     df = pd.read_csv(action_2016_03_file)
     df=data_deal(df)
     return bulit_session(df)
