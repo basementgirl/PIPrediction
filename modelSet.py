@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import xgboost as xgb
+#import xgboost as xgb
 from sklearn.metrics import classification_report
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
@@ -12,15 +12,24 @@ import urllib
 import numpy as np
 from sklearn.metrics import roc_curve
 from sklearn.metrics import auc
+from keras.callbacks import ModelCheckpoint
+import keras
+import matplotlib.pyplot as plt
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import accuracy_score
+
 
 
 def lr_model(X_train, X_test, y_train, y_test):
     lr = LogisticRegression()
     lr.fit(X_train, y_train)
     lr_y_predict = lr.predict(X_test)
-    print(lr_y_predict, y_test)
+    lr_y_predict_proba = lr.predict_proba(X_test)
+    print('lr_y_predict',lr_y_predict, 'lr_y_predict_proba',lr_y_predict_proba)
 
-    test_auc = metrics.roc_auc_score(y_test, lr_y_predict)  # 验证集上的auc值
+
+    print('accu',accuracy_score(lr_y_predict,y_test))
+    test_auc = metrics.roc_auc_score(y_test, lr_y_predict_proba[:,1])  # 验证集上的auc值
     print('test_auc', test_auc)
     print(classification_report(y_test, lr_y_predict, target_names=['0', '1']))
 
@@ -43,6 +52,20 @@ def xgb_model(X_train, X_test, y_train, y_test):
     print(classification_report(y_test, xgbr_y_predict, target_names=['0', '1']))
 
 
+def gbdt_model(X_train, X_test, y_train, y_test):
+    gbc = GradientBoostingClassifier()
+    gbc.fit(X_train, y_train)
+    gbr_y_predict = gbc.predict(X_test)
+    gbr_y_predict_proba = gbc.predict_proba(X_test)
+
+    #print(gbr_y_predict , y_test)
+
+    print('accu',accuracy_score(gbr_y_predict,y_test))
+    test_auc = metrics.roc_auc_score(y_test, gbr_y_predict_proba[:,1] )  # 验证集上的auc值
+    print('test_auc', test_auc)
+    print(classification_report(y_test, gbr_y_predict, target_names=['0', '1']))
+
+
 
 def map_int(i):
     if i>= 0.5:  # 概率大于0.5预测为1，否则预测为0
@@ -50,32 +73,36 @@ def map_int(i):
     else:
         return 0
 
+
 def ann_model(X_train, X_test, y_train, y_test):
     model = Sequential()
     model.add(Dense(64, input_dim=8, activation='relu'))
     model.add(Dropout(0.3))
-    model.add(Dense(32, activation='relu'))
-    model.add(Dropout(0.3))
-    model.add(Dense(16, activation='relu'))
-    model.add(Dropout(0.3))
+    model.add(Dense(28, activation='relu'))
+    model.add(Dropout(0.2))
     model.add(Dense(1, activation='sigmoid'))
 
     model.compile(loss='binary_crossentropy',
                   optimizer='adam',
                   #optimizer='sgd',
                   metrics=['accuracy'])
+
     model.fit(X_train, y_train,
-              epochs=20,batch_size=50
-              )
+              epochs=8,batch_size=28,verbose=0)
+
+
     score = model.evaluate(X_test, y_test, batch_size=50)
-    predict_y=model.predict(X_test, batch_size=32, verbose=0)
+    predict_y=model.predict(X_test, verbose=0)
 
     predict_y=predict_y.reshape(1, -1)     #对预测的概率值变成整数值
     predict_y=pd.Series(predict_y[0])
-    predict_y=predict_y.map(map_int)
 
-    res=classification_report(y_test, predict_y, target_names=['0', '1'])
+    print('predict_y',predict_y)
+    predict_y2=predict_y.map(map_int)
 
+    res=classification_report(y_test, predict_y2, target_names=['0', '1'])
+
+    print('accu',accuracy_score(predict_y2,y_test))
     test_auc = metrics.roc_auc_score(y_test, predict_y)  # 验证集上的auc值
     print('test_auc',test_auc)
 
@@ -86,15 +113,5 @@ def ann_model(X_train, X_test, y_train, y_test):
 
 
 
-def widedeep_model(X_train, X_test, y_train, y_test):
-
-    model_dir = tempfile.mkdtemp()
-    m = tf.contrib.learn.DNNLinearCombinedClassifier(
-        model_dir=model_dir,
-        linear_feature_columns=wide_columns,
-        dnn_feature_columns=deep_columns,
-        dnn_hidden_units=[50, 25])
 
 
-    m.fit(input_fn=train_input_fn, steps=20)
-    results = m.evaluate(input_fn=eval_input_fn, steps=1)

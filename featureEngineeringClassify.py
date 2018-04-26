@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.cross_validation import train_test_split
 from builtSession import main
-from modelSet import ann_model
+from modelSet import ann_model,gbdt_model,lr_model
 
 
 def built_train(dict_n):
@@ -112,6 +112,8 @@ def get_com():
 
 # 代码入口
 if __name__ == '__main__':
+
+#def get_comp_train_and_test():
     dict_n = main()
     x, y = built_train(dict_n)
 
@@ -127,7 +129,9 @@ if __name__ == '__main__':
     print('hhh', x.shape, y.shape)
     print('positive sample num is: ', sum(y), '。 all sample num is ：', len(y))
     X_train, X_test, y_train, y_test = split_sample(x, y)
-    #print('X_train',X_train[:20],'y_train',y_train[:20])
+
+    #return X_train, X_test, y_train, y_test
+
     print(ann_model(X_train, X_test, y_train, y_test))
 
 
