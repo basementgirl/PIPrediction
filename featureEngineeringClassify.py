@@ -68,7 +68,7 @@ def built_train(dict_n):
     y = pd.Series(y)
     # 下采样
     for i in range(len(y)):
-        if y[i] == 0 and (i % 2 == 0 or i % 3 == 0 or i % 5 == 0 ):
+        if y[i] == 0 and (i % 2 == 0 or i % 3 == 0  ):
             x.drop([i], inplace=True)  # 删负样本
             y.drop([i], inplace=True)
     return x,y
