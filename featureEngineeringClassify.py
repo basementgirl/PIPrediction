@@ -118,9 +118,9 @@ if __name__ == '__main__':
     x, y = built_train(dict_n)
 
     x['sku_id'] = x['sku_id'].astype(int)
-    x_com = get_com()
+    # x_com = get_com()
 
-    x = pd.merge(x, x_com, on=['sku_id'], how='left')
+    # x = pd.merge(x, x_com, on=['sku_id'], how='left')
     x.index = x.iloc[:, 0]
     x.drop(['sku_id'], inplace=True, axis=1)
 
